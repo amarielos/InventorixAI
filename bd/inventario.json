@@ -1,0 +1,18 @@
+[
+    {
+        "product_id": 1,
+        "name": "cell phone",
+        "category": "Electronics",
+        "price": 1000.0,
+        "stock": 8,
+        "minimum_stock": 5
+    },
+    {
+        "product_id": 2,
+        "name": "apple",
+        "category": "fruits",
+        "price": 5.0,
+        "stock": 55,
+        "minimum_stock": 10
+    }
+]
