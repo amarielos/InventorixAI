@@ -174,10 +174,14 @@ with tab_escaneo:
         )
 
 
+# =========================================================
+# TAB 2: ANÁLISIS GRÁFICO
+# =========================================================
 with tab_analisis:
     st.markdown("### 📈 Análisis gráfico del inventario")
 
-  
+    # REGLA: el usuario puede entrar a esta pestaña en cualquier momento,
+    # pero si hay escaneo/registro en curso, no puede hacer análisis.
     if st.session_state.scanning_active or st.session_state.registro_en_progreso:
         st.warning(
             "El análisis gráfico está deshabilitado mientras haya un escaneo o un registro en curso.\n\n"
@@ -192,10 +196,10 @@ with tab_analisis:
         else:
             df_movs = pd.DataFrame(st.session_state.movimientos)
 
+            # ------------------- ANÁLISIS GENERAL -------------------
             st.markdown("#### 🧾 Tabla de movimientos registrados")
             st.dataframe(df_movs, use_container_width=True)
 
-            # Ejemplo simple de análisis: cantidad total por producto
             st.markdown("#### 🔍 Cantidad total movida por producto")
             df_resumen = (
                 df_movs.groupby(["Producto", "Tipo_Movimiento"])["Cantidad"]
@@ -207,11 +211,80 @@ with tab_analisis:
                 df_resumen,
                 x="Producto",
                 y="Cantidad",
-                color="Tipo_Movimiento",  # Streamlit 1.30+ (si no, se puede separar)
+                color="Tipo_Movimiento",  # En versiones antiguas de Streamlit, no uses 'color'
             )
 
-            st.markdown(
-                "Aquí luego puedes reemplazar/expandir este análisis con las gráficas que genere "
-                "tu módulo de analítica (por ejemplo, `analytics.py`)."
+            st.markdown("---")
+
+            # ------------------- ANÁLISIS POR PRODUCTO -------------------
+            st.markdown("### 📊 Análisis detallado por producto")
+
+            # Lista de productos únicos
+            productos_disponibles = df_movs["Producto"].dropna().unique().tolist()
+
+            producto_seleccionado = st.selectbox(
+                "Selecciona el producto a analizar:",
+                options=productos_disponibles,
+                index=0 if len(productos_disponibles) > 0 else None
             )
 
+            # Filtramos el DataFrame por el producto elegido
+            df_prod = df_movs[df_movs["Producto"] == producto_seleccionado].copy()
+
+            # Aseguramos que Fecha_Hora sea datetime
+            if not pd.api.types.is_datetime64_any_dtype(df_prod["Fecha_Hora"]):
+                df_prod["Fecha_Hora"] = pd.to_datetime(df_prod["Fecha_Hora"])
+
+            # Ordenamos por fecha
+            df_prod = df_prod.sort_values("Fecha_Hora")
+
+            # Mostramos tabla específica
+            st.markdown(f"#### 🧾 Movimientos del producto: **{producto_seleccionado}**")
+            st.dataframe(df_prod, use_container_width=True)
+
+            # ---------- Tendencia en el tiempo (por movimiento) ----------
+            st.markdown("#### 📉 Tendencia de movimientos en el tiempo")
+
+            # Agrupamos por fecha y tipo de movimiento
+            df_tendencia = (
+                df_prod.groupby(["Fecha_Hora", "Tipo_Movimiento"])["Cantidad"]
+                .sum()
+                .reset_index()
+            )
+
+            if len(df_tendencia) > 0:
+                # Gráfica de líneas de tendencia por tipo de movimiento
+                st.line_chart(
+                    df_tendencia,
+                    x="Fecha_Hora",
+                    y="Cantidad",
+                    color="Tipo_Movimiento"
+                )
+            else:
+                st.info("Aún no hay suficientes datos para mostrar la tendencia de este producto.")
+
+            # ---------- Tendencia acumulada (stock estimado simple) ----------
+            st.markdown("#### 📈 Tendencia acumulada (estimación simple de stock)")
+
+            # Convertimos entrada/salida a signo para una curva acumulada
+            df_prod["Delta"] = df_prod.apply(
+                lambda row: row["Cantidad"] if row["Tipo_Movimiento"] == "entrada" else -row["Cantidad"],
+                axis=1
+            )
+
+            df_cumul = df_prod[["Fecha_Hora", "Delta"]].copy()
+            df_cumul = df_cumul.sort_values("Fecha_Hora")
+            df_cumul["Stock_Aproximado"] = df_cumul["Delta"].cumsum()
+
+            if len(df_cumul) > 0:
+                st.line_chart(
+                    df_cumul,
+                    x="Fecha_Hora",
+                    y="Stock_Aproximado"
+                )
+                st.caption(
+                    "Nota: Este stock es una estimación acumulada basada solo en los movimientos registrados "
+                    "en la aplicación (no considera un stock inicial real)."
+                )
+            else:
+                st.info("No se pudo calcular una tendencia acumulada para este producto.")
