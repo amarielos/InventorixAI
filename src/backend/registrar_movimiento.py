@@ -3,8 +3,8 @@ from datetime import datetime
 
 
 def registrar_movimiento(product_id, cantidad, tipo_movimiento):
-    inventario_path = "bd/inventario.json"
-    historial_path = "bd/historial.json"
+    inventario_path = "data/inventario.json"
+    historial_path = "data/historial.json"
 
     # 1. Cargar inventario
     with open(inventario_path, "r") as file:

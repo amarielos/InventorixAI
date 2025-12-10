@@ -4,7 +4,7 @@ from ultralytics import YOLO
 
 def detectar_producto():
     # 1. Cargar inventario
-    with open("bd/inventario.json", "r") as file:
+    with open("data/inventario.json", "r") as file:
         inventario = json.load(file)
 
     # Crear un set con los nombres de productos del inventario

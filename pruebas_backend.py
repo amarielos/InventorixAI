@@ -1,5 +1,5 @@
-from backend.detectar_producto import detectar_producto
-from backend.registrar_movimiento import registrar_movimiento
+from src.backend.detectar_producto import detectar_producto
+from src.backend.registrar_movimiento import registrar_movimiento
 
 # Flujo principal
 
@@ -36,7 +36,7 @@ if producto:
 # FUNCION 3
 # Obtener dataframe del historial de movimientos
 ########################################################
-from backend.obtener_historial import obtener_historial
+from src.backend.obtener_historial import obtener_historial
 
 df_historial = obtener_historial()
 print(df_historial)

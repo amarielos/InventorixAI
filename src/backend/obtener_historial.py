@@ -2,7 +2,7 @@ import json
 import pandas as pd
 
 def obtener_historial():
-    historial_path = "bd/historial.json"
+    historial_path = "data/historial.json"
 
     # Leer historial
     with open(historial_path, "r") as file:

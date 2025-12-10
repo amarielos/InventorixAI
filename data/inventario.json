@@ -12,7 +12,7 @@
         "name": "apple",
         "category": "fruits",
         "price": 5.0,
-        "stock": 55,
+        "stock": 64,
         "minimum_stock": 10
     }
 ]
