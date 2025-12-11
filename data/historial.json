@@ -1,0 +1,93 @@
+[
+    {
+        "id": 1,
+        "date": "2023-10-01",
+        "time": "10:00",
+        "product_id": 1,
+        "product_name": "cell phone",
+        "minimum_stock": 5,
+        "category": "Electronics",
+        "price_per_unit": 1000.0,
+        "quantity": 2,
+        "stock_after": 8,
+        "movement_type": "Ingreso"
+    },
+    {
+        "id": 2,
+        "date": "2025-12-10",
+        "time": "15:23",
+        "product_id": 2,
+        "product_name": "apple",
+        "minimum_stock": 10,
+        "category": "fruits",
+        "price_per_unit": 5.0,
+        "quantity": 50,
+        "stock_after": 65,
+        "movement_type": "Ingreso"
+    },
+    {
+        "id": 3,
+        "date": "2025-12-10",
+        "time": "15:34",
+        "product_id": 2,
+        "product_name": "apple",
+        "minimum_stock": 10,
+        "category": "fruits",
+        "price_per_unit": 5.0,
+        "quantity": 10,
+        "stock_after": 55,
+        "movement_type": "Salida"
+    },
+    {
+        "id": 4,
+        "date": "2025-12-10",
+        "time": "16:10",
+        "product_id": 2,
+        "product_name": "apple",
+        "minimum_stock": 10,
+        "category": "fruits",
+        "price_per_unit": 5.0,
+        "quantity": 6,
+        "stock_after": 61,
+        "movement_type": "Ingreso"
+    },
+    {
+        "id": 5,
+        "date": "2025-12-10",
+        "time": "16:11",
+        "product_id": 2,
+        "product_name": "apple",
+        "minimum_stock": 10,
+        "category": "fruits",
+        "price_per_unit": 5.0,
+        "quantity": 9,
+        "stock_after": 70,
+        "movement_type": "Ingreso"
+    },
+    {
+        "id": 6,
+        "date": "2025-12-10",
+        "time": "16:19",
+        "product_id": 2,
+        "product_name": "apple",
+        "minimum_stock": 10,
+        "category": "fruits",
+        "price_per_unit": 5.0,
+        "quantity": 6,
+        "stock_after": 64,
+        "movement_type": "Salida"
+    },
+    {
+        "id": 7,
+        "date": "2025-12-10",
+        "time": "18:04",
+        "product_id": 1,
+        "product_name": "cell phone",
+        "minimum_stock": 5,
+        "category": "Electronics",
+        "price_per_unit": 1000.0,
+        "quantity": 10,
+        "stock_after": 18,
+        "movement_type": "Ingreso"
+    }
+]
