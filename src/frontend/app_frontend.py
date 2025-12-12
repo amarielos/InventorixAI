@@ -2,19 +2,25 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
+import os, sys
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
 
 
-# IMPORTS del proyecto (ajusta si tus nombres/rutas cambian)
+
 from src.vision.detectar_producto import detectar_producto
 from src.backend.registrar_movimiento import registrar_movimiento
 from src.backend.obtener_historial import obtener_historial
+from src.backend.graficas import generar_reportes
+
 
 
 st.set_page_config(page_title="Inventorix AI", page_icon="📦", layout="wide")
 
-# -------------------- ESTADOS --------------------
 if "producto_detectado" not in st.session_state:
-    st.session_state.producto_detectado = None  # dict del inventario.json
+    st.session_state.producto_detectado = None 
 
 if "registro_en_progreso" not in st.session_state:
     st.session_state.registro_en_progreso = False
@@ -30,7 +36,8 @@ if "ultimo_registro" not in st.session_state:
 st.title("📦 Inventorix AI")
 st.write("Gestión inteligente de inventario con visión artificial (YOLO) y analítica.")
 
-tab_escaneo, tab_analisis = st.tabs(["Escaneo y registro", "Análisis gráfico"])
+tab_escaneo, tab_analisis, tab_reportes = st.tabs(["Escaneo y registro", "Análisis", "Reportes"])
+
 
 # =========================================================
 # TAB 1: ESCANEO Y REGISTRO
@@ -169,3 +176,25 @@ with tab_analisis:
                 top = df_hist.groupby("product_name")["quantity"].sum().sort_values(ascending=False).reset_index()
                 st.bar_chart(top, x="product_name", y="quantity")
 
+
+with tab_reportes:
+    st.subheader("📊 Reportes (Plotly)")
+
+    # Regla: no permitir reportes si hay escaneo o registro activo
+    if st.session_state.escaneo_en_progreso or st.session_state.registro_en_progreso:
+        st.warning("Termina o cancela el escaneo/registro para habilitar los reportes.")
+    else:
+        if st.button("📌 Generar reportes"):
+            df_rep, figs = generar_reportes()
+
+            st.markdown("### 🧾 DataFrame estandarizado")
+            st.dataframe(df_rep, use_container_width=True)
+
+            st.markdown("### 📈 Gráficas")
+            st.plotly_chart(figs["fig1_ranking_ventas"], use_container_width=True)
+            st.plotly_chart(figs["fig2_alerta_stock"], use_container_width=True)
+            st.plotly_chart(figs["fig3_heatmap"], use_container_width=True)
+            st.plotly_chart(figs["fig4_cuadrante"], use_container_width=True)
+            st.plotly_chart(figs["fig5_sunburst"], use_container_width=True)
+            st.plotly_chart(figs["fig6_pareto"], use_container_width=True)
+            st.plotly_chart(figs["fig7_riesgo"], use_container_width=True)
