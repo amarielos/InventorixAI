@@ -76,5 +76,18 @@
         "quantity": 6,
         "stock_after": 64,
         "movement_type": "Salida"
+    },
+    {
+        "id": 7,
+        "date": "2025-12-16",
+        "time": "17:45",
+        "product_id": 1,
+        "product_name": "cell phone",
+        "minimum_stock": 5,
+        "category": "Electronics",
+        "price_per_unit": 1000.0,
+        "quantity": 2,
+        "stock_after": 10,
+        "movement_type": "Ingreso"
     }
 ]

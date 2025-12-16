@@ -1,60 +1,67 @@
+# detectar_producto.py
 import cv2
 import json
+from collections import Counter
 from ultralytics import YOLO
 
-def detectar_producto():
-    # 1. Cargar inventario
-    with open("data/inventario.json", "r") as file:
-        inventario = json.load(file)
 
-    # Crear un set con los nombres de productos del inventario
-    nombres_inventario = {item["name"].lower(): item for item in inventario}
+class DetectorProducto:
+    # CAMBIAR ÍNDICE DE CÁMARA SEGÚN LA QUE SE USE (cam_index=0, 1, 2, ...)
+    def __init__(self, cam_index=3, conf=0.4):
+        # Inventario
+        with open("data/inventario.json", "r", encoding="utf-8") as f:
+            self.inventario = json.load(f)
 
-    # 2. Cargar modelo YOLO
-    model = YOLO("yolov8n.pt")
+        self.map_inv = {p["name"].lower(): p for p in self.inventario}
 
-    # 3. Inicializar cámara
-    cap = cv2.VideoCapture(0)
+        # Modelo YOLO
+        self.model = YOLO("yolov8n.pt")
+        self.conf = conf
 
-    print("Iniciando cámara... Presiona 'q' para salir manualmente.")
+        # Cámara
+        self.cap = cv2.VideoCapture(cam_index)
 
-    while True:
-        ret, frame = cap.read()
+        self.conteo = Counter()
+
+    def leer_frame(self):
+        ret, frame = self.cap.read()
         if not ret:
-            continue
+            return None, None
 
-        results = model(frame)
+        results = self.model(frame, conf=self.conf)
+        frame_annotated = results[0].plot()
 
-        # Dibujar anotaciones en pantalla
-        anotaciones = results[0].plot()
-        cv2.imshow("Detección", anotaciones)
+        clases = []
+        boxes = results[0].boxes
+        if boxes is not None:
+            for box in boxes:
+                class_id = int(box.cls[0])
+                clases.append(self.model.names[class_id].lower())
 
-        # 4. Extraer detecciones
-        detecciones = results[0].boxes
+        self.conteo = Counter(clases)
+        return frame_annotated, self.conteo
 
-        if len(detecciones) > 0:
-            # Tomar la primera detección
-            clase_id = int(detecciones[0].cls[0])
-            nombre_detectado = model.names[clase_id].lower()
+    def obtener_resultado(self, tipo_movimiento):
+        for nombre, cantidad in self.conteo.items():
+            if nombre in self.map_inv:
+                return {
+                    "producto": self.map_inv[nombre],
+                    "cantidad": int(cantidad),
+                    "tipo": tipo_movimiento
+                }
+        return None
 
-            print(f"Objeto detectado: {nombre_detectado}")
+    def liberar(self):
+        self.cap.release()
 
-            # 5. Verificar si está en el inventario
-            if nombre_detectado in nombres_inventario:
-                print("Producto encontrado en inventario.")
-                producto = nombres_inventario[nombre_detectado]
 
-                # Cerrar cámara y ventanas
-                cap.release()
-                cv2.destroyAllWindows()
-
-                return producto  # ← devuelve todo el objeto
-
-        # Salida manual
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    # Cerrar cámara si se sale sin coincidencias
-    cap.release()
-    cv2.destroyAllWindows()
-    return None
+# =========================================================
+# FUNCIÓN QUE CONSUME EL FRONT (STREAMLIT)
+# =========================================================
+def detectar_producto():
+    """
+    Punto de entrada para el frontend.
+    Abre la UI de escaneo y devuelve el resultado.
+    """
+    from src.vision.detectar_producto_ui import lanzar_ui
+    return lanzar_ui()

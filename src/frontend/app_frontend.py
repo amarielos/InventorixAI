@@ -206,7 +206,12 @@ if st.session_state.page == "Dashboard":
 # =========================================================
 elif st.session_state.page == "Escaneo":
     st.markdown("## 🎥 Escaneo y registro")
-    st.caption("Flujo guiado: escanee → confirme → guarde → analice")
+    st.info(
+        "1) Presiona **Iniciar escaneo (YOLO)**\n"
+        "2) Se abrirá una **ventana nueva** con la cámara\n"
+        "3) Selecciona **Entrada / Salida** en la ventana\n"
+        "4) El registro se guardará automáticamente\n"
+    )
 
     st.write("")
     topA, topB, topC = st.columns([1.1, 1.1, 1])
@@ -215,87 +220,72 @@ elif st.session_state.page == "Escaneo":
         st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
         iniciar = st.button(
             "▶️ Iniciar escaneo (YOLO)",
-            disabled=st.session_state.registro_en_progreso,
+            disabled=st.session_state.escaneo_en_progreso,
             use_container_width=True
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
     with topB:
         cancelar = st.button(
-            "⛔ Cancelar registro",
-            disabled=not st.session_state.registro_en_progreso,
+            "⛔ Cancelar",
+            disabled=not st.session_state.escaneo_en_progreso,
             use_container_width=True
         )
 
     with topC:
-        st.button("📊 Ir a Reportes", on_click=set_page, args=("Reportes",), use_container_width=True)
+        st.button(
+            "📊 Ir a Reportes",
+            on_click=set_page,
+            args=("Reportes",),
+            use_container_width=True
+        )
 
+    # -------------------- CANCELAR --------------------
     if cancelar:
-        st.session_state.producto_detectado = None
-        st.session_state.registro_en_progreso = False
         st.session_state.escaneo_en_progreso = False
         st.session_state.ultimo_registro = None
-        toast_ok("Registro cancelado.")
+        toast_ok("Escaneo cancelado.")
         st.rerun()
 
+    # -------------------- INICIAR ESCANEO --------------------
     if iniciar:
         st.session_state.escaneo_en_progreso = True
-        st.info("Se abrirá una ventana nueva (OpenCV). Para salir manualmente, presiona 'q' en la ventana.")
+        st.info(
+            "Se abrirá una ventana nueva.\n"
+            "Usa **Entrada / Salida** o teclas **E / S**.\n"
+            "Presiona **Q** para cancelar."
+        )
 
-        producto = detectar_producto()
+        resultado = detectar_producto()
+
         st.session_state.escaneo_en_progreso = False
 
-        if producto is None:
-            st.error("No se detectó un producto válido del inventario.")
+        if resultado is None:
+            st.warning("Escaneo cancelado o sin detección válida.")
         else:
-            st.session_state.producto_detectado = producto
-            st.session_state.registro_en_progreso = True
-            toast_ok(f"Producto detectado: {producto.get('name')}")
-        st.rerun()
+            prod = resultado["producto"]
+            cantidad = resultado["cantidad"]
+            tipo = resultado["tipo"]
 
-    # Formulario de registro
-    if st.session_state.registro_en_progreso and st.session_state.producto_detectado is not None:
-        prod = st.session_state.producto_detectado
-
-        st.write("")
-        left, right = st.columns([1.2, 1])
-
-        with left:
-            st.markdown("### 🧾 Producto detectado")
-            card(
-                prod.get("name", "Producto"),
-                f"Categoría: {prod.get('category')} • Precio: {prod.get('price')} • Stock: {prod.get('stock')} • Mínimo: {prod.get('minimum_stock')}"
+            resp = registrar_movimiento(
+                product_id=int(prod["product_id"]),
+                cantidad=int(cantidad),
+                tipo_movimiento=tipo
             )
 
-        with right:
-            st.markdown("### ✏️ Registrar movimiento")
-            tipo = st.radio("Tipo", ["Entrada", "Salida"], horizontal=True)
-            cantidad = st.number_input("Cantidad", min_value=1, step=1, value=1)
-
-            st.write("")
-            st.markdown('<div class="btn-success">', unsafe_allow_html=True)
-            guardar = st.button("💾 Guardar registro", use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-
-            if guardar:
-                # ✅ Guardar SIEMPRE primero
-                resp = registrar_movimiento(
-                    product_id=int(prod["product_id"]),
-                    cantidad=int(cantidad),
-                    tipo_movimiento=tipo.lower()
+            if isinstance(resp, dict) and resp.get("error"):
+                st.error(resp["error"])
+            else:
+                st.session_state.ultimo_registro = resp
+                st.success(
+                    f"✅ {tipo.capitalize()} registrada\n\n"
+                    f"**Producto:** {prod.get('name')}\n"
+                    f"**Cantidad:** {cantidad}\n"
+                    f"**Stock después:** {resp.get('stock_after')}"
                 )
 
-                if isinstance(resp, dict) and resp.get("error"):
-                    st.error(resp["error"])
-                else:
-                    st.session_state.ultimo_registro = resp
-                    st.session_state.producto_detectado = None
-                    st.session_state.registro_en_progreso = False
+        st.rerun()
 
-                    # ✅ Abrir diálogo (sin bloquear el guardado)
-                    st.session_state.save_dialog_data = resp
-                    st.session_state.show_save_dialog = True
-                    st.rerun()
 
 
 # =========================================================
