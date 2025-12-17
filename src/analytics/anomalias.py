@@ -3,26 +3,67 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 
 
+def _require_cols(df: pd.DataFrame, cols: list[str], ctx: str):
+    missing = [c for c in cols if c not in df.columns]
+    if missing:
+        raise KeyError(
+            f"{ctx}: faltan columnas {missing}. Columnas actuales: {list(df.columns)}"
+        )
+
+
+def _build_fecha_hora(df: pd.DataFrame) -> pd.Series:
+    """
+    Construye una columna datetime robusta.
+    Acepta cualquiera de estos formatos:
+
+    1) 'date' + 'time' (como historial.json)
+    2) 'Fecha_Hora'
+    3) 'fecha_hora'
+    4) 'timestamp'
+    5) 'datetime'
+    """
+    candidates = ["Fecha_Hora", "fecha_hora", "timestamp", "datetime"]
+
+    for c in candidates:
+        if c in df.columns:
+            return pd.to_datetime(df[c], errors="coerce")
+
+    if "date" in df.columns and "time" in df.columns:
+        return pd.to_datetime(df["date"].astype(str) + " " + df["time"].astype(str), errors="coerce")
+
+    # Si no hay ninguna forma
+    raise KeyError(
+        "No existe 'date'+'time' ni una columna datetime como "
+        "'Fecha_Hora'/'fecha_hora'/'timestamp'/'datetime'."
+    )
+
+
 def _preparar_features(df_hist: pd.DataFrame):
     """
-    Convierte el historial (JSON->DF) a un DF con features numéricas para IA.
-    Espera columnas: date, time, quantity, movement_type, product_id, product_name
-    movement_type esperado: 'Ingreso' o 'Salida'
+    Convierte el historial a features numéricas para IA.
+    Requiere al menos:
+      - quantity
+      - movement_type
+    y alguna forma de tiempo:
+      - date+time o Fecha_Hora/timestamp/etc.
     """
     df = df_hist.copy()
 
-    # datetime
-    df["Fecha_Hora"] = pd.to_datetime(df["date"] + " " + df["time"], errors="coerce")
+    # datetime robusto
+    df["Fecha_Hora"] = _build_fecha_hora(df)
     df = df.dropna(subset=["Fecha_Hora"]).sort_values("Fecha_Hora")
+
+    # columnas mínimas
+    _require_cols(df, ["quantity", "movement_type"], ctx="Historial para anomalías")
 
     # features tiempo
     df["hora"] = df["Fecha_Hora"].dt.hour
     df["dia_semana"] = df["Fecha_Hora"].dt.dayofweek  # 0=Lunes
 
     # tipo movimiento -> binario
-    df["es_salida"] = (df["movement_type"].astype(str).str.lower() == "salida").astype(int)
+    df["es_salida"] = (df["movement_type"].astype(str).str.lower().str.strip() == "salida").astype(int)
 
-    # cantidad (aseguramos numérico)
+    # cantidad
     df["cantidad"] = pd.to_numeric(df["quantity"], errors="coerce").fillna(0)
 
     feats = df[["cantidad", "es_salida", "hora", "dia_semana"]].copy()
@@ -31,33 +72,39 @@ def _preparar_features(df_hist: pd.DataFrame):
 
 def _interpretar_y_accion(row: pd.Series) -> tuple[str, str]:
     """
-    Genera interpretación (explicación) + acción sugerida por anomalía.
+    Genera interpretación + acción sugerida por anomalía (explicación humana).
     """
     prod = str(row.get("product_name", "Producto"))
     movimiento = str(row.get("movement_type", "")).strip()
     motivo = str(row.get("motivo", "")).strip()
     q = row.get("quantity", None)
+    stock_after = row.get("stock_after", None)
 
     interpretacion = (
-        f"El movimiento de **{prod}** fue marcado como anómalo porque el patrón no coincide con el comportamiento "
-        f"habitual registrado. {motivo}".strip()
-    )
+        f"El movimiento de **{prod}** fue marcado como anómalo porque no se parece al patrón histórico. {motivo}"
+    ).strip()
 
+    # acción por tipo
     if movimiento.lower() == "salida":
         accion = (
-            "Verificar si fue una venta grande, merma o error de digitación. "
-            "Confirmar con ticket/factura o control de bodega. "
-            "Si fue error, corregir el movimiento para evitar quiebres de stock."
+            "Posible causa: venta inusual, merma, ajuste o error de digitación. "
+            "Revisar ticket/factura o control de bodega. "
+            "Si fue error, corregir el registro para evitar quiebre de stock."
         )
     else:
         accion = (
-            "Verificar si fue una recepción/compra real o un ajuste de inventario. "
-            "Confirmar con factura/recepción. "
-            "Si fue error, corregir para no inflar el stock."
+            "Posible causa: ingreso atípico, compra grande, ajuste o error de digitación. "
+            "Revisar documento de recepción/factura. "
+            "Si fue error, corregir el registro para no inflar inventario."
         )
 
-    if q is not None and isinstance(q, (int, float)) and q > 0:
+    # afinaciones útiles
+    if isinstance(q, (int, float)) and q and q > 0:
         accion += " Validar unidades y que la cantidad esté en la unidad correcta."
+
+    if isinstance(stock_after, (int, float)) and stock_after is not None:
+        if movimiento.lower() == "salida" and stock_after < 0:
+            accion += " Stock negativo sugiere inconsistencia: revisar histórico y corregir."
 
     return interpretacion, accion
 
@@ -70,10 +117,10 @@ def detectar_movimientos_extranos(
     """
     Devuelve el historial con columnas nuevas:
     - anomaly: 1 si es anómalo, 0 si normal
-    - anomaly_score: score (más bajo suele ser más anómalo)
+    - anomaly_score: score (más alto = más normal; más bajo = más anómalo)
     - motivo: explicación corta del porqué
-    - interpretacion: explicación más humana (qué podría estar pasando)
-    - accion_sugerida: qué revisar/hacer
+    - interpretacion: explicación humana
+    - accion_sugerida: recomendación
     """
     if df_historial is None or len(df_historial) == 0:
         return pd.DataFrame()
@@ -105,14 +152,16 @@ def detectar_movimientos_extranos(
     # Motivos (explicabilidad ligera)
     df["motivo"] = ""
 
-    # Reglas explicativas por producto (solo para dar “por qué”)
+    # Reglas explicativas por producto (si existe)
     if "product_id" in df.columns:
         for pid, grp in df.groupby("product_id"):
             cantidades = grp["cantidad"].values
             if len(cantidades) < 3:
                 continue
+
             mu = float(np.mean(cantidades))
-            sigma = float(np.std(cantidades)) if float(np.std(cantidades)) > 0 else 1.0
+            sigma_val = float(np.std(cantidades))
+            sigma = sigma_val if sigma_val > 0 else 1.0
 
             for i in grp.index:
                 if int(df.at[i, "anomaly"]) == 1:
@@ -156,3 +205,4 @@ def resumen_anomalias(df_anom: pd.DataFrame) -> dict:
     anom = int(df_anom["anomaly"].sum()) if "anomaly" in df_anom.columns else 0
     pct = (anom / total) * 100 if total > 0 else 0.0
     return {"total": total, "anomalias": anom, "porcentaje": pct}
+
