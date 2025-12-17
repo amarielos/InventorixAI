@@ -163,43 +163,111 @@ st.caption("Interfaz corporativa • Flujo guiado • Acciones rápidas")
 # PAGE: DASHBOARD
 # =========================================================
 if st.session_state.page == "Dashboard":
-    col1, col2 = st.columns([1.2, 1])
 
+    # ---------- GRID PRINCIPAL ----------
+    col1, col2 = st.columns([1.25, 1], gap="large")
+
+    # ===============================
+    # COLUMNA IZQUIERDA
+    # ===============================
     with col1:
         card(
             "Resumen",
             "Identifique productos con cámara (YOLO), registre entradas/salidas y obtenga reportes y alertas para decisiones."
         )
+
         st.write("")
+
+        # ---------- KPIs ----------
         kpi_row([
-            ("Fecha/Hora", fmt_now()),
-            ("Modo", "Local (OpenCV)"),
-            ("Estado", "Listo ✅" if not st.session_state.registro_en_progreso else "En registro…"),
+            ("📅 Fecha / Hora", fmt_now()),
+            ("⚙️ Modo", "Local (OpenCV)"),
+            (
+                "🟢 Estado",
+                "Listo ✅" if not st.session_state.registro_en_progreso else "En registro…"
+            ),
         ])
 
         st.write("")
-        st.markdown("### Acciones rápidas")
-        a, b, c = st.columns(3)
-        with a:
-            st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
-            st.button("▶️ Ir a Escaneo", on_click=set_page, args=("Escaneo",), use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-        with b:
-            st.button("📊 Ver Reportes", on_click=set_page, args=("Reportes",), use_container_width=True)
-        with c:
-            st.button("🤖 Ver Alertas IA", on_click=set_page, args=("Alertas IA",), use_container_width=True)
+        st.divider()
 
+        # ---------- ACCIONES RÁPIDAS ----------
+        st.markdown("### 🚀 Acciones rápidas")
+
+        a, b, c = st.columns(3, gap="medium")
+
+        with a:
+            st.button(
+                "▶️ Ir a Escaneo",
+                on_click=set_page,
+                args=("Escaneo",),
+                use_container_width=True
+            )
+
+        with b:
+            st.button(
+                "📊 Ver Reportes",
+                on_click=set_page,
+                args=("Reportes",),
+                use_container_width=True
+            )
+
+        with c:
+            st.button(
+                "🤖 Ver Alertas IA",
+                on_click=set_page,
+                args=("Alertas IA",),
+                use_container_width=True
+            )
+
+        st.write("")
+        st.divider()
+
+        # ---------- INFO DEL EQUIPO ----------
+        st.markdown("### 👥 Equipo")
+
+        team_col1, team_col2 = st.columns([1, 2])
+
+        with team_col1:
+            st.markdown("**Bug Busters** 🐞")
+
+        with team_col2:
+            st.markdown(
+                """
+                - **Ángel Hernández**
+                - **Brayan Rojas**
+                - **Bryan Anona**
+                - **María Aguilar**
+                - **Rodolfo Ramos**
+                """
+            )
+
+        st.caption(
+            "Proyecto desarrollado durante la hackathon · Enfoque en IA aplicada a inventarios"
+        )
+
+    # ===============================
+    # COLUMNA DERECHA
+    # ===============================
     with col2:
-        st.markdown("### Último registro")
+        st.markdown("### 🕒 Último registro")
+
         if st.session_state.ultimo_registro:
             r = st.session_state.ultimo_registro
             card(
                 "Registro guardado",
-                f"Producto: {r.get('product_name')} • Movimiento: {r.get('movement_type')} • Cantidad: {r.get('quantity')} • Stock después: {r.get('stock_after')}"
+                f"""
+                **Producto:** {r.get('product_name')}  
+                **Movimiento:** {r.get('movement_type')}  
+                **Cantidad:** {r.get('quantity')}  
+                **Stock después:** {r.get('stock_after')}
+                """
             )
         else:
-            card("Sin registros aún", "Realiza un escaneo y guarda un movimiento para ver actividad aquí.")
-
+            card(
+                "Sin registros aún",
+                "Realiza un escaneo y guarda un movimiento para ver actividad aquí."
+            )
 
 # =========================================================
 # PAGE: ESCANEO (YOLO + Registro)
@@ -217,13 +285,11 @@ elif st.session_state.page == "Escaneo":
     topA, topB, topC = st.columns([1.1, 1.1, 1])
 
     with topA:
-        st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
         iniciar = st.button(
             "▶️ Iniciar escaneo (YOLO)",
             disabled=st.session_state.escaneo_en_progreso,
             use_container_width=True
         )
-        st.markdown("</div>", unsafe_allow_html=True)
 
     with topB:
         cancelar = st.button(
