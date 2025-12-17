@@ -1,11 +1,11 @@
 [
     {
         "product_id": 1,
-        "name": "cell phone",
-        "category": "Electronics",
-        "price": 1000.0,
-        "stock": 6,
-        "minimum_stock": 5
+        "name": "orange",
+        "category": "fruits",
+        "price": 4.0,
+        "stock": 50,
+        "minimum_stock": 10
     },
     {
         "product_id": 2,
@@ -14,5 +14,78 @@
         "price": 5.0,
         "stock": 64,
         "minimum_stock": 10
+    },
+    {
+        "product_id": 3,
+        "name": "bread",
+        "category": "bakery",
+        "price": 2.5,
+        "stock": 30,
+        "minimum_stock": 15
+    },
+    {
+        "product_id": 4,
+        "name": "milk",
+        "category": "dairy",
+        "price": 20.0,
+        "stock": 25,
+        "minimum_stock": 5
+    },
+    {
+        "product_id": 5,
+        "name": "eggs",
+        "category": "dairy",
+        "price": 40.0,
+        "stock": 60,
+        "minimum_stock": 10
+    },
+    {
+        "product_id": 6,
+        "name": "rice",
+        "category": "grains",
+        "price": 8.0,
+        "stock": 40,
+        "minimum_stock": 8
+    },
+    {
+        "product_id": 7,
+        "name": "beans",
+        "category": "grains",
+        "price": 15.0,
+        "stock": 20,
+        "minimum_stock": 5
+    },
+    {
+        "product_id": 8,
+        "name": "boxed juice",
+        "category": "beverages",
+        "price": 5.0,
+        "stock": 15,
+        "minimum_stock": 5
+    },
+    {
+        "product_id": 9,
+        "name": "canned soda",
+        "category": "beverages",
+        "price": 8.0,
+        "stock": 40,
+        "minimum_stock": 5
+    },
+    {
+        "product_id": 10,
+        "name": "chocolate",
+        "category": "snacks",
+        "price": 12.0,
+        "stock": 35,
+        "minimum_stock": 10
+    },
+    {
+        "product_id": 11,
+        "name": "chips",
+        "category": "snacks",
+        "price": 10.0,
+        "stock": 45,
+        "minimum_stock": 10
     }
+
 ]
