@@ -16,6 +16,9 @@ def registrar_movimiento(product_id, cantidad, tipo_movimiento):
     if producto is None:
         return {"error": "Producto no encontrado"}
 
+    # 🔹 GUARDAR STOCK ANTERIOR
+    stock_anterior = producto["stock"]
+
     # 2. Actualizar stock
     if tipo_movimiento.lower() == "entrada":
         producto["stock"] += cantidad
@@ -32,9 +35,8 @@ def registrar_movimiento(product_id, cantidad, tipo_movimiento):
     with open(inventario_path, "w") as file:
         json.dump(inventario, file, indent=4)
 
-    # 3. Guardar movimiento en historial
-    fecha_actual = datetime.now().strftime("%Y-%m-%d")
-    hora_actual = datetime.now().strftime("%H:%M")
+    # 3. Fecha y hora completas
+    fecha_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # Cargar historial
     try:
@@ -48,8 +50,7 @@ def registrar_movimiento(product_id, cantidad, tipo_movimiento):
 
     nuevo_registro = {
         "id": nuevo_id,
-        "date": fecha_actual,
-        "time": hora_actual,
+        "datetime": fecha_hora,
 
         "product_id": producto["product_id"],
         "product_name": producto["name"],
@@ -57,9 +58,11 @@ def registrar_movimiento(product_id, cantidad, tipo_movimiento):
         "category": producto["category"],
         "price_per_unit": producto["price"],
 
+        "movement_type": "Ingreso" if tipo_movimiento.lower() == "entrada" else "Salida",
         "quantity": cantidad,
-        "stock_after": producto["stock"],
-        "movement_type": "Ingreso" if tipo_movimiento.lower() == "entrada" else "Salida"
+
+        "stock_before": stock_anterior,
+        "stock_after": producto["stock"]
     }
 
     historial.append(nuevo_registro)

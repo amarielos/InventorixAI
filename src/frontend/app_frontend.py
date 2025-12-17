@@ -277,15 +277,32 @@ elif st.session_state.page == "Escaneo":
                 st.error(resp["error"])
             else:
                 st.session_state.ultimo_registro = resp
-                st.success(
-                    f"✅ {tipo.capitalize()} registrada\n\n"
-                    f"**Producto:** {prod.get('name')}\n"
-                    f"**Cantidad:** {cantidad}\n"
-                    f"**Stock después:** {resp.get('stock_after')}"
-                )
+                toast_ok("Registro guardado correctamente")
 
         st.rerun()
 
+    # =====================================================
+    # CONFIRMACIÓN VISUAL – TARJETA DE REGISTRO GUARDADO
+    # =====================================================
+    if st.session_state.ultimo_registro:
+        r = st.session_state.ultimo_registro
+
+        st.write("")
+        st.markdown("### ✅ Último registro guardado")
+
+        card(
+            "Movimiento registrado",
+            f"""
+            <ul style="list-style: none; padding-left: 0; margin: 0;">
+            <li><strong>Producto:</strong> {r.get('product_name')}</li>
+            <li><strong>Movimiento:</strong> {r.get('movement_type')}</li>
+            <li><strong>Cantidad:</strong> {r.get('quantity')}</li>
+            <li><strong>Stock anterior:</strong> {r.get('stock_before')}</li>
+            <li><strong>Stock después:</strong> {r.get('stock_after')}</li>
+            <li><strong>Fecha / Hora:</strong> {r.get('datetime')}</li>
+            </ul>
+            """
+        )
 
 
 # =========================================================

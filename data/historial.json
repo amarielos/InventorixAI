@@ -89,5 +89,57 @@
         "quantity": 2,
         "stock_after": 10,
         "movement_type": "Ingreso"
+    },
+    {
+        "id": 8,
+        "date": "2025-12-16",
+        "time": "17:53",
+        "product_id": 1,
+        "product_name": "cell phone",
+        "minimum_stock": 5,
+        "category": "Electronics",
+        "price_per_unit": 1000.0,
+        "quantity": 2,
+        "stock_after": 12,
+        "movement_type": "Ingreso"
+    },
+    {
+        "id": 9,
+        "fecha_hora": "2025-12-16 17:59:53",
+        "product_id": 1,
+        "product_name": "cell phone",
+        "minimum_stock": 5,
+        "category": "Electronics",
+        "price_per_unit": 1000.0,
+        "movement_type": "Salida",
+        "quantity": 2,
+        "stock_anterior": 12,
+        "stock_after": 10
+    },
+    {
+        "id": 10,
+        "datetime": "2025-12-16 18:02:47",
+        "product_id": 1,
+        "product_name": "cell phone",
+        "minimum_stock": 5,
+        "category": "Electronics",
+        "price_per_unit": 1000.0,
+        "movement_type": "Salida",
+        "quantity": 2,
+        "stock_before": 10,
+        "stock_after": 8
+    },
+    {
+        "id": 11,
+        "datetime": "2025-12-16 18:08:49",
+        "product_id": 1,
+        "product_name": "cell phone",
+        "minimum_stock": 5,
+        "category": "Electronics",
+        "price_per_unit": 1000.0,
+        "movement_type": "Salida",
+        "quantity": 2,
+        "stock_before": 8,
+        "stock_after": 6
     }
 ]

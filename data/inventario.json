@@ -4,7 +4,7 @@
         "name": "cell phone",
         "category": "Electronics",
         "price": 1000.0,
-        "stock": 10,
+        "stock": 6,
         "minimum_stock": 5
     },
     {
