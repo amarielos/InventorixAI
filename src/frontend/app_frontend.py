@@ -13,7 +13,7 @@ if ROOT not in sys.path:
 from src.vision.detectar_producto import detectar_producto
 from src.backend.registrar_movimiento import registrar_movimiento
 from src.backend.obtener_historial import obtener_historial
-from src.backend.graficas import generar_reportes
+from src.backend.graficas import generar_reportes, recalcular_figuras, recalcular_kpis
 
 from src.analytics.anomalias import detectar_movimientos_extranos, resumen_anomalias
 
@@ -306,41 +306,147 @@ elif st.session_state.page == "Escaneo":
 
 
 # =========================================================
-# PAGE: REPORTES
+# PAGE: REPORTES (Dashboard BI)
 # =========================================================
+
 elif st.session_state.page == "Reportes":
     st.markdown("## 📊 Reportes")
-    st.caption("Visualizaciones para toma de decisiones")
+    st.caption("Dashboard analítico para apoyo a la toma de decisiones")
+
+    # ---------- ESTADO ----------
+    if "df_reportes" not in st.session_state:
+        st.session_state.df_reportes = None
+        st.session_state.figs = None
+        st.session_state.kpis = None
 
     if st.session_state.escaneo_en_progreso or st.session_state.registro_en_progreso:
         st.warning("Termina o cancela el escaneo/registro para habilitar reportes.")
         st.button("Volver a Escaneo", on_click=set_page, args=("Escaneo",))
     else:
+        # ===============================
+        # BOTONES SUPERIORES
+        # ===============================
         top = st.columns([1, 1, 1])
         with top[0]:
-            st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
-            gen = st.button("📌 Generar reportes", use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+            generar = st.button("📌 Generar reportes", use_container_width=True)
         with top[1]:
             st.button("🏠 Volver al Dashboard", on_click=set_page, args=("Dashboard",), use_container_width=True)
         with top[2]:
             st.button("🤖 Ir a Alertas IA", on_click=set_page, args=("Alertas IA",), use_container_width=True)
 
-        if gen:
-            df_rep, figs = generar_reportes()
+        # ---------- GENERAR REPORTE UNA SOLA VEZ ----------
+        if generar or st.session_state.df_reportes is None:
+            if generar:
+                df_rep, figs, kpis = generar_reportes()
+                st.session_state.df_reportes = df_rep
+                st.session_state.figs = figs
+                st.session_state.kpis = kpis
 
-            st.markdown("### 🧾 Dataset (vista de tabla)")
-            st.dataframe(df_rep, use_container_width=True)
+        # ---------- SI YA HAY DATOS ----------
+        if st.session_state.df_reportes is not None:
+            df_rep = st.session_state.df_reportes.copy()
+            figs = st.session_state.figs
+            kpis = st.session_state.kpis
 
-            st.markdown("### 📈 Gráficas")
-            st.plotly_chart(figs["fig1_ranking_ventas"], use_container_width=True)
-            st.plotly_chart(figs["fig2_alerta_stock"], use_container_width=True)
-            st.plotly_chart(figs["fig3_heatmap"], use_container_width=True)
-            st.plotly_chart(figs["fig4_cuadrante"], use_container_width=True)
-            st.plotly_chart(figs["fig5_sunburst"], use_container_width=True)
-            st.plotly_chart(figs["fig6_pareto"], use_container_width=True)
-            st.plotly_chart(figs["fig7_riesgo"], use_container_width=True)
+            # ===============================
+            # KPIs
+            # ===============================
+            st.markdown("### 📌 Indicadores Clave")
 
+            k1, k2, k3, k4 = st.columns(4)
+            with k1:
+                st.metric("💰 Ventas totales", f"${kpis['ventas_totales']:,.2f}")
+            with k2:
+                st.metric("📦 Productos", kpis["productos_distintos"])
+            with k3:
+                st.metric("⚠️ Bajo stock mínimo", kpis["productos_bajo_minimo"])
+            with k4:
+                st.metric("📉 Riesgo inventario", f"{kpis['riesgo_pct']:.1f}%")
+
+            # ===============================
+            # FILTROS
+            # ===============================
+            st.markdown("### 🎛️ Filtros")
+
+            f1, f2, f3 = st.columns(3)
+            with f1:
+                categoria = st.multiselect(
+                    "Categoría",
+                    sorted(df_rep["Categoria_Tienda"].unique())
+                )
+            with f2:
+                producto = st.multiselect(
+                    "Producto",
+                    sorted(df_rep["Producto_Tienda"].unique())
+                )
+            with f3:
+                tipo = st.multiselect(
+                    "Movimiento",
+                    sorted(df_rep["Tipo_de_Movimiento"].unique())
+                )
+
+            # ---------- APLICAR FILTROS ----------
+            df_filtrado = df_rep.copy()
+
+            if categoria:
+                df_filtrado = df_filtrado[df_filtrado["Categoria_Tienda"].isin(categoria)]
+            if producto:
+                df_filtrado = df_filtrado[df_filtrado["Producto_Tienda"].isin(producto)]
+            if tipo:
+                df_filtrado = df_filtrado[df_filtrado["Tipo_de_Movimiento"].isin(tipo)]
+
+            # ---------- DATASET VACÍO ----------
+            if df_filtrado.empty:
+                st.warning("⚠️ No hay datos para los filtros seleccionados.")
+                st.stop()
+
+            # ===============================
+            # ANALISIS PRINCIPAL
+            # ===============================
+            st.markdown("### 📈 Análisis Principal")
+
+            figs_filtradas = recalcular_figuras(df_filtrado)
+
+            c1, c2 = st.columns(2)
+            with c1:
+                st.plotly_chart(figs_filtradas["fig1_ranking_ventas"], use_container_width=True)
+            with c2:
+                st.plotly_chart(figs_filtradas["fig2_alerta_stock"], use_container_width=True)
+
+            c3, c4 = st.columns(2)
+            with c3:
+                st.plotly_chart(figs_filtradas["fig6_pareto"], use_container_width=True)
+            with c4:
+                st.plotly_chart(figs_filtradas["fig7_riesgo"], use_container_width=True)
+
+            # ===============================
+            # ANALISIS OPERACIONAL
+            # ===============================
+            st.markdown("### 🔍 Operación y Comportamiento")
+
+            c5, c6 = st.columns(2)
+            with c5:
+                st.plotly_chart(figs_filtradas["fig3_heatmap"], use_container_width=True)
+            with c6:
+                st.plotly_chart(figs_filtradas["fig4_cuadrante"], use_container_width=True)
+
+            st.plotly_chart(figs_filtradas["fig5_sunburst"], use_container_width=True)
+
+            # ===============================
+            # ALERTAS ANALITICAS
+            # ===============================
+            kpis_filtrados = recalcular_kpis(df_filtrado)
+
+            if kpis_filtrados["productos_criticos"] > 0:
+                st.warning(
+                    f"⚠️ {kpis_filtrados['productos_criticos']} productos con menos de 3 días de cobertura estimada."
+                )
+
+            # ===============================
+            # DATASET
+            # ===============================
+            with st.expander("📄 Ver dataset completo"):
+                st.dataframe(df_filtrado, use_container_width=True)
 
 # =========================================================
 # PAGE: ALERTAS IA

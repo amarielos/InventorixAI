@@ -1,119 +1,111 @@
 [
     {
         "id": 1,
-        "date": "2023-10-01",
-        "time": "10:00",
+        "datetime": "2023-10-01 10:00:00",
         "product_id": 1,
         "product_name": "cell phone",
         "minimum_stock": 5,
         "category": "Electronics",
         "price_per_unit": 1000.0,
         "quantity": 2,
-        "stock_after": 8,
-        "movement_type": "Ingreso"
+        "movement_type": "Ingreso",
+        "stock_after": 8
     },
     {
         "id": 2,
-        "date": "2025-12-10",
-        "time": "15:23",
+        "datetime": "2025-12-10 15:23:00",
         "product_id": 2,
         "product_name": "apple",
         "minimum_stock": 10,
         "category": "fruits",
         "price_per_unit": 5.0,
         "quantity": 50,
-        "stock_after": 65,
-        "movement_type": "Ingreso"
+        "movement_type": "Ingreso",
+        "stock_after": 65
     },
     {
         "id": 3,
-        "date": "2025-12-10",
-        "time": "15:34",
+        "datetime": "2025-12-10 15:34:00",
         "product_id": 2,
         "product_name": "apple",
         "minimum_stock": 10,
         "category": "fruits",
         "price_per_unit": 5.0,
         "quantity": 10,
-        "stock_after": 55,
-        "movement_type": "Salida"
+        "movement_type": "Salida",
+        "stock_after": 55
     },
     {
         "id": 4,
-        "date": "2025-12-10",
-        "time": "16:10",
+        "datetime": "2025-12-10 16:10:00",
         "product_id": 2,
         "product_name": "apple",
         "minimum_stock": 10,
         "category": "fruits",
         "price_per_unit": 5.0,
         "quantity": 6,
-        "stock_after": 61,
-        "movement_type": "Ingreso"
+        "movement_type": "Ingreso",
+        "stock_after": 61
     },
     {
         "id": 5,
-        "date": "2025-12-10",
-        "time": "16:11",
+        "datetime": "2025-12-10 16:11:00",
         "product_id": 2,
         "product_name": "apple",
         "minimum_stock": 10,
         "category": "fruits",
         "price_per_unit": 5.0,
         "quantity": 9,
-        "stock_after": 70,
-        "movement_type": "Ingreso"
+        "movement_type": "Ingreso",
+        "stock_after": 70
     },
     {
         "id": 6,
-        "date": "2025-12-10",
-        "time": "16:19",
+        "datetime": "2025-12-10 16:19:00",
         "product_id": 2,
         "product_name": "apple",
         "minimum_stock": 10,
         "category": "fruits",
         "price_per_unit": 5.0,
         "quantity": 6,
-        "stock_after": 64,
-        "movement_type": "Salida"
+        "movement_type": "Salida",
+        "stock_after": 64
     },
     {
         "id": 7,
-        "date": "2025-12-16",
-        "time": "17:45",
+        "datetime": "2025-12-16 17:45:00",
         "product_id": 1,
         "product_name": "cell phone",
         "minimum_stock": 5,
         "category": "Electronics",
         "price_per_unit": 1000.0,
         "quantity": 2,
-        "stock_after": 10,
-        "movement_type": "Ingreso"
+        "movement_type": "Ingreso",
+        "stock_after": 10
     },
     {
         "id": 8,
-        "date": "2025-12-16",
-        "time": "17:53",
+        "datetime": "2025-12-16 17:53:00",
         "product_id": 1,
         "product_name": "cell phone",
         "minimum_stock": 5,
         "category": "Electronics",
         "price_per_unit": 1000.0,
         "quantity": 2,
-        "stock_after": 12,
-        "movement_type": "Ingreso"
+        "movement_type": "Ingreso",
+        "stock_after": 12
     },
     {
         "id": 9,
-        "fecha_hora": "2025-12-16 17:59:53",
+        "datetime": "2025-12-16 17:59:53",
         "product_id": 1,
         "product_name": "cell phone",
         "minimum_stock": 5,
         "category": "Electronics",
         "price_per_unit": 1000.0,
-        "movement_type": "Salida",
         "quantity": 2,
-        "stock_anterior": 12,
+        "movement_type": "Salida",
+        "stock_before": 12,
         "stock_after": 10
     },
     {
@@ -124,8 +116,8 @@
         "minimum_stock": 5,
         "category": "Electronics",
         "price_per_unit": 1000.0,
-        "movement_type": "Salida",
         "quantity": 2,
+        "movement_type": "Salida",
         "stock_before": 10,
         "stock_after": 8
     },
@@ -137,8 +129,8 @@
         "minimum_stock": 5,
         "category": "Electronics",
         "price_per_unit": 1000.0,
-        "movement_type": "Salida",
         "quantity": 2,
+        "movement_type": "Salida",
         "stock_before": 8,
         "stock_after": 6
     }
